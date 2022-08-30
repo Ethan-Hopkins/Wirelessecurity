@@ -34,9 +34,21 @@ def bitize(byts: bytes) -> 'list[int]':
     """
     bitize bytes
     """
-    bits = []
+    bits = list()
+    count = 1
     # TODO: your code here
-
+    for byte in byts:
+        
+        if byte!=0:
+            for temp in range(3):
+                if temp == byte: bits.append(1)
+                else: bits.append(0)
+                count+=1
+        else:
+            for temp in range(3): 
+                bits.append(0)
+                count+=1
+    print(bits)
     return bits
 
 def debitize(bits: Iterable[int]) -> bytes:
@@ -67,19 +79,21 @@ def permute(raw_seq: Iterable, table: Iterable[int]) -> list:
     """
     permute bits with a table
     """
-    # TODO: your code here
-    return [] # just a placeholder
+    result = list()
+    for i in table:
+        result.append(raw_seq[i])
+    #if index in table is 40 and the value is 3, the 40th index in raw_seq goes to the new third index
+    return result # just a placeholder
 
 def xor(bits1: Iterable[int], bits2: Iterable[int]) -> 'list[int]':
     """
     xor two bits
     """
-    # TODO: your code 
     result = list()
     for b1,b2 in zip_longest(bits1,bits2, fillvalue= 0):
         result.append( 1 if b1!=b2 else 0)
     
-    return result # just a placeholder
+    return result 
 
 class DES:
 

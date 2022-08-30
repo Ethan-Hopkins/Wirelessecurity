@@ -41,7 +41,7 @@ def test_xor():
     expresult=[0,0,1,0,0,1,0,0,1,0,0]
     result_bits2 = xor(test1,test2)
     for b1,output in zip_longest(result_bits2,expresult,fillvalue=0):
-        #print(b1,output)
+        
         assert b1 == output
 
     print("xor tested")
