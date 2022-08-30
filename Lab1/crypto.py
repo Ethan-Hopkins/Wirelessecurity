@@ -1,5 +1,6 @@
 
 from copy import deepcopy
+from itertools import zip_longest
 import random
 from typing import Iterable
 
@@ -73,8 +74,12 @@ def xor(bits1: Iterable[int], bits2: Iterable[int]) -> 'list[int]':
     """
     xor two bits
     """
-    # TODO: your code here
-    return [] # just a placeholder
+    # TODO: your code 
+    result = list()
+    for b1,b2 in zip_longest(bits1,bits2, fillvalue= 0):
+        result.append( 1 if b1!=b2 else 0)
+    
+    return result # just a placeholder
 
 class DES:
 

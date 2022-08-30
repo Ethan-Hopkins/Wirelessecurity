@@ -1,6 +1,7 @@
 
 
-from crypto import bit2hex, hex2bit, bitize, debitize, permute, DES
+from itertools import zip_longest
+from crypto import bit2hex, hex2bit, bitize, debitize, permute,xor, DES
 
 # data used for tests
 byts = bytes.fromhex("0002000000000001")
@@ -30,6 +31,20 @@ def test_permute():
         assert permuted_bit == result_bit
 
     print("permute tested")
+
+def test_xor():
+    result_bits = xor(bits,bits)
+    for b in result_bits:
+        assert b == 0
+    test1=[1,0,1,1,0,0,1,1,0,0,1]
+    test2=[1,0,0,1,0,1,1,1,1,0,1]
+    expresult=[0,0,1,0,0,1,0,0,1,0,0]
+    result_bits2 = xor(test1,test2)
+    for b1,output in zip_longest(result_bits2,expresult,fillvalue=0):
+        #print(b1,output)
+        assert b1 == output
+
+    print("xor tested")
 
 def test_key_gen() -> None:
     key = bytes.fromhex('AABB09182736CCDD')
@@ -87,6 +102,7 @@ print("Testing... \033[1;32m")
 test_bitize()
 test_debitize()
 test_permute()
+test_xor()
 
 test_key_gen()
 test_enc_block()
