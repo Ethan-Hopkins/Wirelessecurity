@@ -34,21 +34,14 @@ def bitize(byts: bytes) -> 'list[int]':
     """
     bitize bytes
     """
+    # each number of the original setup is hex and decides what 4 of the final bits will be f = 1111 2 = 0010
     bits = list()
-    count = 1
-    # TODO: your code here
+    byts = bytes.hex(byts)
     for byte in byts:
-        
-        if byte!=0:
-            for temp in range(3):
-                if temp == byte: bits.append(1)
-                else: bits.append(0)
-                count+=1
-        else:
-            for temp in range(3): 
-                bits.append(0)
-                count+=1
-    print(bits)
+        #converteach
+        temp = bin(int(byte,16))[2:].zfill(4)
+        for bit in temp: bits.append(int(bit))
+
     return bits
 
 def debitize(bits: Iterable[int]) -> bytes:
@@ -59,6 +52,15 @@ def debitize(bits: Iterable[int]) -> bytes:
         raise ValueError('bits length is not a multiple of 8')
 
     byts = []
+    chunk_size = 4
+    list_chunked = [bits[i:i + chunk_size] for i in range(0, len(bits), chunk_size)]
+    #print(list_chunked)
+    for list in list_chunked:
+        count = 0
+        count+= list[0]*8+list[1]*4+list[2]*2+list[3]
+        byts.append(count)
+    return bytes.fromhex(''.join(str(bit) for bit in byts))
+        
 
     # TODO: your code here
     return byts

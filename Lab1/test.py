@@ -11,7 +11,9 @@ permuted_bits = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 
 def test_bitize():
     result_bits: list[int] = bitize(byts)
+    #print(result_bits)
     for bit, result_bit in zip(bits, result_bits):
+        #print(bit,result_bit)
         assert bit == result_bit
     
     print("bitize tested")
@@ -49,7 +51,7 @@ def test_xor():
 def test_key_gen() -> None:
     key = bytes.fromhex('AABB09182736CCDD')
     key = bitize(key)
-    # print(key)
+    print(key)
 
     keys = DES.key_generation(key)
     last_key = bit2hex(keys[-1])
