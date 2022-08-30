@@ -27,7 +27,7 @@ class Client:
 
 
 if __name__ == '__main__':
-    client = Client('localhost', 9999)
+    client = Client('localhost', 9998)
     key = KeyManager().read_key('key.txt')
     des = DES(key)
 
@@ -35,7 +35,9 @@ if __name__ == '__main__':
         msg = input('> ')
         if msg == 'exit':
             break
-
+        else:
+            client.send(msg.encode())
+        print(client.recv().decode())
         # TODO: your code here
         
     client.close()

@@ -29,17 +29,18 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server('localhost', 9999)
+    server = Server('localhost', 9998)
     key = KeyManager.read_key('key.txt')
     des = DES(key)
 
     while True:
         # TODO: your code here
-
+        print(server.recv().decode())
         msg = input('> ')
         if msg == 'exit':
             break
-        
+        else:
+            server.send(msg.encode())
         # TODO: your code here
 
     server.close()
