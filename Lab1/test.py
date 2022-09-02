@@ -51,8 +51,6 @@ def test_xor():
 def test_key_gen() -> None:
     key = bytes.fromhex('AABB09182736CCDD')
     key = bitize(key)
-    print(key)
-
     keys = DES.key_generation(key)
     last_key = bit2hex(keys[-1])
     assert last_key == "181c5d75c66d"
@@ -63,6 +61,7 @@ def test_enc_block() -> None:
     key = bytes.fromhex("AABB09182736CCDD")
     
     des = DES(key)
+    print(des)
     result = des.enc_block(bitize(plaintext))
     result = bit2hex(result).upper()
     # print(result)

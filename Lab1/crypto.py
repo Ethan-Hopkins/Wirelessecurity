@@ -58,12 +58,9 @@ def debitize(bits: Iterable[int]) -> bytes:
     for list in list_chunked:
         count = 0
         count+= list[0]*8+list[1]*4+list[2]*2+list[3]
-        byts.append(count)
+        byts.append(hex(count)[2:])
     return bytes.fromhex(''.join(str(bit) for bit in byts))
         
-
-    # TODO: your code here
-    return byts
 
 def bit2hex(bits: Iterable[int]) -> str:
     """
@@ -234,12 +231,46 @@ class DES:
         raw_key: 64 bits
         return: 16 * (48bits key)
         """
-
-        keys: 'list[list[int]]' = []
+        # had to change this
+        keys= list()
         # TODO: your code here
-
+        #drop parity bits looks like its working
+        parityDropped = permute(key,DES.KEY_DROP)
+        #split left right
+        leftkey = list()
+        rightkey = list()
+        for split in range(56):
+            if split<=27: leftkey.append(parityDropped[split])
+            else: rightkey.append(parityDropped[split])
+        #print(len(leftkey),len(rightkey))
+        # 16 round for loop shift keys
+        # combine thats a  key
+        #repeat
+        for loop in range(16):
+            #shiftleft
+            DES.shiftLeft(leftkey,DES.BIT_SHIFT[loop])
+            #shift right
+            DES.shiftLeft(rightkey,DES.BIT_SHIFT[loop])
+            #combine
+            newkey = list()
+            for combine in range(56):
+                if combine<=27: newkey.append(leftkey[combine])
+                else: newkey.append(rightkey[combine-28])
+            #print(len(newkey),"huh")
+            # permute to make 48 bits
+            keys.append(permute(newkey,DES.KEY_COMPRESSION))
+            #append to keys
         return keys
 
+    @staticmethod
+    def shiftLeft(key: 'list[int]',numShifts: 'int') -> 'list[int]':
+        for shifts in range(numShifts):
+            Storagebit = key[0]
+            for restBits in range(1,28):
+                key[restBits-1] = key[restBits]
+            key[27] = Storagebit
+        return key
+    
     @staticmethod
     def f(R: 'list[int]', key: 'list[int]') -> 'list[int]':
         """
@@ -249,8 +280,30 @@ class DES:
         return: 32 bits
         """
         # TODO: your code here
+        #permute R expantion table to expand to 48 bits
+        expanded = permute(R,DES.D_EXPANSION)
+        #xor expanded r and key
+        whitener = xor(expanded,key)
+        # sboxes?
+        chunks = list()
+        for chunk in range(8):
+            chunks.append(list())
+            for bit in range(6):
+                chunks[chunk].append(whitener[(chunk*6)+bit])
+        #print(chunks[0][1])
+        post_sbox= list()
+        outbyte=0
+        for chunk in range(8):
+            row = chunks[chunk][0]*2 +chunks[chunk][5]
+            column = chunks[chunk][1]*8 +chunks[chunk][2]*4+chunks[chunk][3]*2+chunks[chunk][4]  
+            outbyte = bin(DES.S[chunk][row][column])[2:].zfill(4)
+            for bit in range(4):
+                #keep ur eye on this it might be wrong
+                post_sbox.append(int(outbyte[bit]))
+        #straight dboxes?
+        output = permute(post_sbox,DES.D_STRAIGHT)
 
-        return [] # just a placeholder
+        return output 
 
     @staticmethod  
     def mixer(L: 'list[int]', R: 'list[int]', sub_key: 'list[int]') -> 'tuple[list[int]]':
@@ -261,7 +314,7 @@ class DES:
         """
         # TODO: your code here
         # tips: finish f and xor first, then use them here
-
+        return (xor(L,DES.f(R,sub_key)),R)
         return (L, R) # just a placeholder
     
     @staticmethod
@@ -285,8 +338,47 @@ class DES:
         block: 64 bits.
         return: 64 bits.
         """
+        testing = 1
         # TODO: your code here
-        return [] # just a placeholder
+        #intial permutation
+        initial = permute(block,self.IP)
+        if testing==1 :
+            print("start enc_block test")
+            assert bit2hex(initial) =="14a7d67818ca18ad"
+            print("IP PASSED")
+
+        #splitblock
+        leftBlock = list()
+        rightBlock = list()
+        for split in range(64):
+            if split<=31: leftBlock.append(initial[split])
+            else: rightBlock.append(initial[split])
+        if testing==1 :
+            assert bit2hex(leftBlock) =="14a7d678"
+            assert bit2hex(rightBlock)=="18ca18ad"
+            print("SPLITTING PASSED")
+            
+            assert bit2hex(xor(leftBlock,self.f(rightBlock,self.keys[0])))=="5a78e394"
+            print("FUNCTION PASSED")
+        #repeat 15 times
+        for loop in range(16):
+            leftBlock = self.mixer(leftBlock,rightBlock,self.keys[loop])[0]
+            
+            if(loop!=15): 
+                swapped = self.swapper(leftBlock,rightBlock)
+                leftBlock=swapped[0]
+                rightBlock=swapped[1]
+            print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
+            
+            #leftblock = xor(leftblock,f(rightblock,48bitkey))
+            #swapper
+        #leftblock = xor(leftblock,f(rightblock,48bitkey))
+        output = list()
+        for combine in range(64):
+            if(combine<32): output.append(leftBlock[combine])
+            else: output.append(rightBlock[combine-32])
+        return permute(output,self.FP)
+        #return finalpermutation
 
     def dec_block(self, block: 'list[int]') -> 'list[int]':
         """
