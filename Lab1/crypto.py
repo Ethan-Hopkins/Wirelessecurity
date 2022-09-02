@@ -2,6 +2,7 @@
 from copy import deepcopy
 from itertools import zip_longest
 import random
+from re import I
 from typing import Iterable
 
 
@@ -338,7 +339,7 @@ class DES:
         block: 64 bits.
         return: 64 bits.
         """
-        testing = 1
+        testing = 0
         # TODO: your code here
         #intial permutation
         initial = permute(block,self.IP)
@@ -368,7 +369,7 @@ class DES:
                 swapped = self.swapper(leftBlock,rightBlock)
                 leftBlock=swapped[0]
                 rightBlock=swapped[1]
-            print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
+            #print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
             
             #leftblock = xor(leftblock,f(rightblock,48bitkey))
             #swapper
@@ -386,8 +387,37 @@ class DES:
         block: 64 bits
         return: 64 bits
         """
+        testing = 0
         # TODO: your code here
-        return [] # just a placeholder
+        #intial permutation
+        initial = permute(block,self.IP)
+        
+
+        #splitblock
+        leftBlock = list()
+        rightBlock = list()
+        for split in range(64):
+            if split<=31: leftBlock.append(initial[split])
+            else: rightBlock.append(initial[split])
+        
+        #repeat 15 times
+        for loop in range(16):
+            leftBlock = self.mixer(leftBlock,rightBlock,self.keys[15-loop])[0]
+            
+            if(loop!=15): 
+                swapped = self.swapper(leftBlock,rightBlock)
+                leftBlock=swapped[0]
+                rightBlock=swapped[1]
+            #print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
+            
+            #leftblock = xor(leftblock,f(rightblock,48bitkey))
+            #swapper
+        #leftblock = xor(leftblock,f(rightblock,48bitkey))
+        output = list()
+        for combine in range(64):
+            if(combine<32): output.append(leftBlock[combine])
+            else: output.append(rightBlock[combine-32])
+        return permute(output,self.FP)
 
     def encrypt(self, msg_str: str) -> bytes:
         """
@@ -395,13 +425,42 @@ class DES:
         Handle block division here.
         *Inputs are guaranteed to have a length divisible by 8.
         """
-        # TODO: your code here
-        return b'' # just a placeholder
+        encrypted = list()
+        counter = 0
+        block = ""
+        #print(bitize(msg_str))
+        for char in msg_str:
+            
+            counter+=1
+            block+=char
+            if counter %8 == 0:
+                block = block.encode()
+                print(block)
+                cipherblock = self.enc_block(bitize(block))
+                for bit in cipherblock:
+                    encrypted.append(bit)
+                block = ""
+        #print(debitize(encrypted))
+        return debitize(encrypted) # just a placeholder
     
     def decrypt(self, msg_bytes: bytes) -> str:
         """
         Decrypt the whole message.
         Similar to encrypt.
         """
-        # TODO: your code here
-        return '' # just a placeholder
+        decrypted = ""
+        counter = 0
+        block = ""
+        msg = msg_bytes.hex()
+        for byte in msg:
+            block+=byte
+            counter+=1
+            if(counter%16==0):
+                result= bit2hex(self.dec_block(bitize(bytes.fromhex(block))))
+                #print((bit2hex(result)))
+                block=""  
+                for bit in result:
+                    decrypted+=bit
+        print()
+            
+        return (bytes.fromhex(decrypted).decode()) # just a placeholderSS

@@ -61,7 +61,7 @@ def test_enc_block() -> None:
     key = bytes.fromhex("AABB09182736CCDD")
     
     des = DES(key)
-    print(des)
+    
     result = des.enc_block(bitize(plaintext))
     result = bit2hex(result).upper()
     # print(result)
@@ -73,7 +73,6 @@ def test_encrypt() -> None:
     des = DES(bytes.fromhex("AABB09182736CCDD"))
     msg = "Hello World     "
     result = des.encrypt(msg)
-    # print(result.hex())
     assert result.hex().lower() == "d1a87d37f5b6bfe101ae4d6a4e1204d4"
     print("encrypt tested")
 
@@ -84,7 +83,7 @@ def test_dec_block() -> None:
     des = DES(key)
     result = des.dec_block(bitize(ciphertext))
     result = bit2hex(result)
-    # print(result)
+    #print(result)
 
     assert result == "123456ABCD132536".lower()
     print("dec_block tested")
