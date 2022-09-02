@@ -35,12 +35,17 @@ if __name__ == '__main__':
 
     while True:
         # TODO: your code here
-        print(server.recv().decode())
+        saved = server.recv()
+        print(des.decrypt(saved))
+        print(saved)
         msg = input('> ')
+        while len(msg)%8!=0:
+            msg+=" "
         if msg == 'exit':
             break
         else:
-            server.send(msg.encode())
+            server.send(des.encrypt(msg))
+            
         # TODO: your code here
 
     server.close()

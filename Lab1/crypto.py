@@ -435,7 +435,6 @@ class DES:
             block+=char
             if counter %8 == 0:
                 block = block.encode()
-                print(block)
                 cipherblock = self.enc_block(bitize(block))
                 for bit in cipherblock:
                     encrypted.append(bit)
@@ -461,6 +460,5 @@ class DES:
                 block=""  
                 for bit in result:
                     decrypted+=bit
-        print()
             
         return (bytes.fromhex(decrypted).decode()) # just a placeholderSS

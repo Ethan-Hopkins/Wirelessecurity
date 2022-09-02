@@ -33,11 +33,16 @@ if __name__ == '__main__':
 
     while True:
         msg = input('> ')
+        while len(msg)%8!=0:
+            msg+=" "
         if msg == 'exit':
             break
         else:
-            client.send(msg.encode())
-        print(client.recv().decode())
+            
+            client.send(des.encrypt(msg))
+        saved = client.recv()
+        print(des.decrypt(saved))
+        print(saved)
         # TODO: your code here
         
     client.close()
