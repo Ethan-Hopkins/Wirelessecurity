@@ -29,21 +29,31 @@ class Server:
 
 
 if __name__ == '__main__':
+    KeyManager.save_key('key.txt', KeyManager.generate_key(KeyManager,256))
     server = Server('localhost', 9998)
+    display = 0
     key = KeyManager.read_key('key.txt')
     des = DES(key)
 
     while True:
         # TODO: your code here
         saved = server.recv()
-        print(des.decrypt(saved))
-        print(saved)
+        if display == 0:
+            print(des.decrypt(saved))
+        else:
+            print(saved.hex())
         msg = input('> ')
-        while len(msg)%8!=0:
-            msg+=" "
+        if msg == 'plain':
+            display = 0
+            msg = input('> ')
+        elif msg == 'cypher':
+            display = 1
+            msg = input('> ')
         if msg == 'exit':
             break
         else:
+            while len(msg)%8!=0:
+                msg+=" "
             server.send(des.encrypt(msg))
             
         # TODO: your code here

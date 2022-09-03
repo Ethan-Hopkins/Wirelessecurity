@@ -30,19 +30,28 @@ if __name__ == '__main__':
     client = Client('localhost', 9998)
     key = KeyManager().read_key('key.txt')
     des = DES(key)
-
+    display = 0
     while True:
+        
         msg = input('> ')
-        while len(msg)%8!=0:
-            msg+=" "
+        if msg == 'plain':
+            display = 0
+            msg = input('> ')
+        elif msg == 'cypher':
+            display = 1
+            msg = input('> ')
         if msg == 'exit':
             break
+        
         else:
-            
+            while len(msg)%8!=0:
+                msg+=" "
             client.send(des.encrypt(msg))
         saved = client.recv()
-        print(des.decrypt(saved))
-        print(saved)
+        if display == 0:
+            print(des.decrypt(saved))
+        else:
+            print(saved.hex())
         # TODO: your code here
         
     client.close()

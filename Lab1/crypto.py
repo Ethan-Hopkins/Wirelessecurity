@@ -3,6 +3,7 @@ from copy import deepcopy
 from itertools import zip_longest
 import random
 from re import I
+import secrets
 from typing import Iterable
 
 
@@ -25,10 +26,7 @@ class KeyManager:
         Generate a random key of length key_len (bit length).
         return: random bytes of length (key_len // 8)
         """
-        # TODO: your code here
-        rand_bytes = bytes() # just a placeholder
-
-        return rand_bytes
+        return secrets.token_bytes(key_len//8)
 
 
 def bitize(byts: bytes) -> 'list[int]':
