@@ -35,10 +35,14 @@ def bitize(byts: bytes) -> 'list[int]':
     """
     # each number of the original setup is hex and decides what 4 of the final bits will be f = 1111 2 = 0010
     bits = list()
-    byts = bytes.hex(byts)
+
+    #convert bytes into hex string
+    byts = byts.hex()
+
     for byte in byts:
-        #converteach
+        #convert each hex digit into len 4 bit str 
         temp = bin(int(byte,16))[2:].zfill(4)
+        #append each bit to total length
         for bit in temp: bits.append(int(bit))
 
     return bits
@@ -50,15 +54,18 @@ def debitize(bits: Iterable[int]) -> bytes:
     if len(bits) % 8 != 0:
         raise ValueError('bits length is not a multiple of 8')
 
-    byts = []
+    byts = ""
     chunk_size = 4
+    #chunk list into size chunk_size lists
     list_chunked = [bits[i:i + chunk_size] for i in range(0, len(bits), chunk_size)]
     #print(list_chunked)
     for list in list_chunked:
         count = 0
+        #convert 4 digit bin string to hex and concat it to byts
         count+= list[0]*8+list[1]*4+list[2]*2+list[3]
-        byts.append(hex(count)[2:])
-    return bytes.fromhex(''.join(str(bit) for bit in byts))
+        byts+=(hex(count)[2:])
+    #return bytes from the hex string
+    return bytes.fromhex(byts)
         
 
 def bit2hex(bits: Iterable[int]) -> str:
@@ -230,35 +237,24 @@ class DES:
         raw_key: 64 bits
         return: 16 * (48bits key)
         """
-        # had to change this
         keys= list()
-        # TODO: your code here
         #drop parity bits looks like its working
         parityDropped = permute(key,DES.KEY_DROP)
         #split left right
-        leftkey = list()
-        rightkey = list()
-        for split in range(56):
-            if split<=27: leftkey.append(parityDropped[split])
-            else: rightkey.append(parityDropped[split])
-        #print(len(leftkey),len(rightkey))
-        # 16 round for loop shift keys
-        # combine thats a  key
+        chunk_size = 28
+        key_split = [parityDropped[i:i + chunk_size] for i in range(0, len(parityDropped), chunk_size)]
+        leftkey = key_split[0]
+        rightkey = key_split[1]
+        # 16 round for loop, shift keys combine thats a new key and add to key list 
         #repeat
         for loop in range(16):
-            #shiftleft
+            #shiftkeys
             DES.shiftLeft(leftkey,DES.BIT_SHIFT[loop])
-            #shift right
             DES.shiftLeft(rightkey,DES.BIT_SHIFT[loop])
-            #combine
-            newkey = list()
-            for combine in range(56):
-                if combine<=27: newkey.append(leftkey[combine])
-                else: newkey.append(rightkey[combine-28])
-            #print(len(newkey),"huh")
-            # permute to make 48 bits
+            #combine keys again
+            newkey = leftkey+rightkey
+            # permute to make 48 bits and add to key list
             keys.append(permute(newkey,DES.KEY_COMPRESSION))
-            #append to keys
         return keys
 
     @staticmethod
