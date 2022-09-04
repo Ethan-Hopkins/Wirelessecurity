@@ -6,7 +6,7 @@ from re import I
 import secrets
 from typing import Iterable
 
-
+#testing branch
 class KeyManager:
     @staticmethod
     def read_key(key_file: str) -> bytes:
@@ -35,10 +35,14 @@ def bitize(byts: bytes) -> 'list[int]':
     """
     # each number of the original setup is hex and decides what 4 of the final bits will be f = 1111 2 = 0010
     bits = list()
-    byts = bytes.hex(byts)
+
+    #convert bytes into hex string
+    byts = byts.hex()
+
     for byte in byts:
-        #converteach
+        #convert each hex digit into len 4 bit str 
         temp = bin(int(byte,16))[2:].zfill(4)
+        #append each bit to total length
         for bit in temp: bits.append(int(bit))
 
     return bits
@@ -50,15 +54,18 @@ def debitize(bits: Iterable[int]) -> bytes:
     if len(bits) % 8 != 0:
         raise ValueError('bits length is not a multiple of 8')
 
-    byts = []
+    byts = ""
     chunk_size = 4
+    #chunk list into size chunk_size lists
     list_chunked = [bits[i:i + chunk_size] for i in range(0, len(bits), chunk_size)]
     #print(list_chunked)
     for list in list_chunked:
         count = 0
+        #convert 4 digit bin string to hex and concat it to byts
         count+= list[0]*8+list[1]*4+list[2]*2+list[3]
-        byts.append(hex(count)[2:])
-    return bytes.fromhex(''.join(str(bit) for bit in byts))
+        byts+=(hex(count)[2:])
+    #return bytes from the hex string
+    return bytes.fromhex(byts)
         
 
 def bit2hex(bits: Iterable[int]) -> str:
@@ -230,35 +237,23 @@ class DES:
         raw_key: 64 bits
         return: 16 * (48bits key)
         """
-        # had to change this
         keys= list()
-        # TODO: your code here
         #drop parity bits looks like its working
         parityDropped = permute(key,DES.KEY_DROP)
         #split left right
-        leftkey = list()
-        rightkey = list()
-        for split in range(56):
-            if split<=27: leftkey.append(parityDropped[split])
-            else: rightkey.append(parityDropped[split])
-        #print(len(leftkey),len(rightkey))
-        # 16 round for loop shift keys
-        # combine thats a  key
+        chunk_size = 28
+        (leftkey,rightkey) = [parityDropped[i:i + chunk_size] for i in range(0, len(parityDropped), chunk_size)]
+        
+        # 16 round for loop, shift keys combine thats a new key and add to key list 
         #repeat
         for loop in range(16):
-            #shiftleft
+            #shiftkeys
             DES.shiftLeft(leftkey,DES.BIT_SHIFT[loop])
-            #shift right
             DES.shiftLeft(rightkey,DES.BIT_SHIFT[loop])
-            #combine
-            newkey = list()
-            for combine in range(56):
-                if combine<=27: newkey.append(leftkey[combine])
-                else: newkey.append(rightkey[combine-28])
-            #print(len(newkey),"huh")
-            # permute to make 48 bits
+            #combine keys again
+            newkey = leftkey+rightkey
+            # permute to make 48 bits and add to key list
             keys.append(permute(newkey,DES.KEY_COMPRESSION))
-            #append to keys
         return keys
 
     @staticmethod
@@ -278,31 +273,23 @@ class DES:
         key: 48 bits
         return: 32 bits
         """
-        # TODO: your code here
         #permute R expantion table to expand to 48 bits
         expanded = permute(R,DES.D_EXPANSION)
         #xor expanded r and key
         whitener = xor(expanded,key)
-        # sboxes?
-        chunks = list()
-        for chunk in range(8):
-            chunks.append(list())
-            for bit in range(6):
-                chunks[chunk].append(whitener[(chunk*6)+bit])
-        #print(chunks[0][1])
+        #break into 8 len(6) chunks
+        chunk_size = 6
+        chunks = [whitener[i:i + chunk_size] for i in range(0, len(whitener), chunk_size)]
         post_sbox= list()
-        outbyte=0
+        #for each chunk get the row and collum from the bits in each chunk,
+        #then appened the correct bit to the output according to the DES sbox tables
         for chunk in range(8):
             row = chunks[chunk][0]*2 +chunks[chunk][5]
             column = chunks[chunk][1]*8 +chunks[chunk][2]*4+chunks[chunk][3]*2+chunks[chunk][4]  
             outbyte = bin(DES.S[chunk][row][column])[2:].zfill(4)
-            for bit in range(4):
-                #keep ur eye on this it might be wrong
-                post_sbox.append(int(outbyte[bit]))
-        #straight dboxes?
-        output = permute(post_sbox,DES.D_STRAIGHT)
-
-        return output 
+            for bit in range(4): post_sbox.append(int(outbyte[bit]))
+        #return the sbox output permuted witth the straight Dbox
+        return  permute(post_sbox,DES.D_STRAIGHT)
 
     @staticmethod  
     def mixer(L: 'list[int]', R: 'list[int]', sub_key: 'list[int]') -> 'tuple[list[int]]':
@@ -311,16 +298,13 @@ class DES:
         sub_key: 48 bits
         return: 32 bits
         """
-        # TODO: your code here
-        # tips: finish f and xor first, then use them here
+        # f function the right key with the correct sub key, then xor that output witht the left key
+        #return the xor output with the origional right key as a tuple
         return (xor(L,DES.f(R,sub_key)),R)
-        return (L, R) # just a placeholder
     
     @staticmethod
     def swapper(L: 'list[int]', R: 'list[int]') -> 'tuple[list[int]]':
-        """
-        A free function for you, LMAO ^O^
-        """
+        #swaps the left and right key and returns as tuple
         return R, L
 
     def __init__(self, raw_key: bytes) -> None:
@@ -337,8 +321,8 @@ class DES:
         block: 64 bits.
         return: 64 bits.
         """
+        #hardcoded for internal testing, if 0 ignore tests if 1 there will be a known input so you can check outputs
         testing = 0
-        # TODO: your code here
         #intial permutation
         initial = permute(block,self.IP)
         if testing==1 :
@@ -346,12 +330,10 @@ class DES:
             assert bit2hex(initial) =="14a7d67818ca18ad"
             print("IP PASSED")
 
-        #splitblock
-        leftBlock = list()
-        rightBlock = list()
-        for split in range(64):
-            if split<=31: leftBlock.append(initial[split])
-            else: rightBlock.append(initial[split])
+        #splitblock into 2 chunks
+        chunk_size = 32
+        (leftBlock,rightBlock) = [initial[i:i + chunk_size] for i in range(0, len(initial), chunk_size)]
+        
         if testing==1 :
             assert bit2hex(leftBlock) =="14a7d678"
             assert bit2hex(rightBlock)=="18ca18ad"
@@ -359,25 +341,16 @@ class DES:
             
             assert bit2hex(xor(leftBlock,self.f(rightBlock,self.keys[0])))=="5a78e394"
             print("FUNCTION PASSED")
-        #repeat 15 times
+
+        #repeat 16 times do mixer function all 16 and swap on all but last loop according to DES function
         for loop in range(16):
             leftBlock = self.mixer(leftBlock,rightBlock,self.keys[loop])[0]
             
             if(loop!=15): 
-                swapped = self.swapper(leftBlock,rightBlock)
-                leftBlock=swapped[0]
-                rightBlock=swapped[1]
-            #print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
-            
-            #leftblock = xor(leftblock,f(rightblock,48bitkey))
-            #swapper
-        #leftblock = xor(leftblock,f(rightblock,48bitkey))
-        output = list()
-        for combine in range(64):
-            if(combine<32): output.append(leftBlock[combine])
-            else: output.append(rightBlock[combine-32])
-        return permute(output,self.FP)
-        #return finalpermutation
+                (leftBlock,rightBlock) = self.swapper(leftBlock,rightBlock)
+        #return output after finalpermutation
+        return permute(leftBlock+rightBlock,self.FP)
+        
 
     def dec_block(self, block: 'list[int]') -> 'list[int]':
         """
@@ -385,37 +358,20 @@ class DES:
         block: 64 bits
         return: 64 bits
         """
-        testing = 0
-        # TODO: your code here
         #intial permutation
         initial = permute(block,self.IP)
         
-
-        #splitblock
-        leftBlock = list()
-        rightBlock = list()
-        for split in range(64):
-            if split<=31: leftBlock.append(initial[split])
-            else: rightBlock.append(initial[split])
+        #splitblock into 2 chunks
+        chunk_size = 32
+        (leftBlock,rightBlock) = [initial[i:i + chunk_size] for i in range(0, len(initial), chunk_size)]
         
-        #repeat 15 times
+        #repeat 16 times do mixer function all 16 and swap on all but last loop according to DES function
         for loop in range(16):
             leftBlock = self.mixer(leftBlock,rightBlock,self.keys[15-loop])[0]
-            
             if(loop!=15): 
-                swapped = self.swapper(leftBlock,rightBlock)
-                leftBlock=swapped[0]
-                rightBlock=swapped[1]
-            #print(loop,bit2hex(leftBlock),bit2hex(rightBlock))
-            
-            #leftblock = xor(leftblock,f(rightblock,48bitkey))
-            #swapper
-        #leftblock = xor(leftblock,f(rightblock,48bitkey))
-        output = list()
-        for combine in range(64):
-            if(combine<32): output.append(leftBlock[combine])
-            else: output.append(rightBlock[combine-32])
-        return permute(output,self.FP)
+                (leftBlock,rightBlock) = self.swapper(leftBlock,rightBlock)
+        #return output after finalpermutation
+        return permute(leftBlock+rightBlock,self.FP)
 
     def encrypt(self, msg_str: str) -> bytes:
         """
@@ -424,20 +380,13 @@ class DES:
         *Inputs are guaranteed to have a length divisible by 8.
         """
         encrypted = list()
-        counter = 0
-        block = ""
-        #print(bitize(msg_str))
-        for char in msg_str:
-            
-            counter+=1
-            block+=char
-            if counter %8 == 0:
-                block = block.encode()
-                cipherblock = self.enc_block(bitize(block))
-                for bit in cipherblock:
-                    encrypted.append(bit)
-                block = ""
-        #print(debitize(encrypted))
+        chunk_size = 8
+        #chunk list into size chunk_size lists
+        msg_chunked = [msg_str[i:i + chunk_size] for i in range(0, len(msg_str), chunk_size)]
+        #for each chunk, encode it into bytes, turn those bytes into bit list, and encrypt that 64 bit list
+        for chunk in msg_chunked:
+            encrypted+=(self.enc_block(bitize(chunk.encode())))
+        #take that encrypted 64 bit list and turn it back into bytes and return it
         return debitize(encrypted) # just a placeholder
     
     def decrypt(self, msg_bytes: bytes) -> str:
@@ -446,17 +395,16 @@ class DES:
         Similar to encrypt.
         """
         decrypted = ""
-        counter = 0
-        block = ""
         msg = msg_bytes.hex()
-        for byte in msg:
-            block+=byte
-            counter+=1
-            if(counter%16==0):
-                result= bit2hex(self.dec_block(bitize(bytes.fromhex(block))))
-                #print((bit2hex(result)))
-                block=""  
-                for bit in result:
-                    decrypted+=bit
-            
-        return (bytes.fromhex(decrypted).decode()) # just a placeholderSS
+        chunk_size = 16
+        #chunk list into size chunk_size lists
+        msg_chunked = [msg[i:i + chunk_size] for i in range(0, len(msg), chunk_size)]
+
+        #for each hex chunk turn it into bytes and decrypt that block of bytes,
+        #then turn that block back into hex and add it to decrypted
+        for chunk in msg_chunked:
+            result= bit2hex(self.dec_block(bitize(bytes.fromhex(chunk))))
+            for bit in result:
+                decrypted+=bit
+        # return the decoded string
+        return (bytes.fromhex(decrypted).decode())
