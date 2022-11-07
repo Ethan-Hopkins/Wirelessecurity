@@ -36,8 +36,9 @@ if __name__ == '__main__':
     des = DES(key)
 
     while True:
-        # TODO: your code here
+        #recieve message
         saved = server.recv()
+        #check if method should be displayed as cyphertext or plaintext
         if display == 0:
             print(des.decrypt(saved))
         else:

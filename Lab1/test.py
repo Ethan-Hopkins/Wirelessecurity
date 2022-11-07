@@ -2,13 +2,13 @@
 
 from itertools import zip_longest
 from crypto import bit2hex, hex2bit, bitize, debitize, permute,xor, DES
-
+import timeit
 # data used for tests
 byts = bytes.fromhex("0002000000000001")
 bits = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
 permuted_bits = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
 
-
+start = timeit.default_timer()
 def test_bitize():
     result_bits: list[int] = bitize(byts)
     #print(result_bits)
@@ -110,5 +110,7 @@ test_encrypt()
 test_dec_block()
 test_decrypt()
 
+stop = timeit.default_timer()
 
+print('Time: ', stop - start)  
 print("All tests passed!" + "\033[0m")
