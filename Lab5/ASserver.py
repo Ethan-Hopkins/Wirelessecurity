@@ -1,6 +1,10 @@
 import socket, random, secrets,time
 from des import DesKey
-from crypto import KeyManager
+from crypto import KeyManager, cryptoM
+
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Random import get_random_bytes
 class Server:
     def __init__(self, addr, port, buffer_size=1024):
         self.addr = addr
@@ -28,26 +32,35 @@ class Server:
 
 
 if __name__ == '__main__':
-    KeyManager.save_key("Kc.txt",KeyManager.generate_key(KeyManager,64))
-    KeyManager.save_key("Ktgs.txt",KeyManager.generate_key(KeyManager,64))
-    KeyManager.save_key("Kv.txt",KeyManager.generate_key(KeyManager,64))
+    KeyManager.save_key("Kc.txt",KeyManager.generate_key(KeyManager,128))
+    KeyManager.save_key("Ktgs.txt",KeyManager.generate_key(KeyManager,128))
+    KeyManager.save_key("Kv.txt",KeyManager.generate_key(KeyManager,128))
     Kc = KeyManager.read_key("Kc.txt")
     Ktgs = KeyManager.read_key("Ktgs.txt")
-
-    IDC = 'CIS3319USERID'
-    IDTGS = 'CIS3319TGSID'
-    Lifetime2 = '60'
-
-    Kctgs = KeyManager.generate_key(KeyManager,64)
     
+    Lifetime2 = 60
+
+    BLOCK_SIZE = 16
+    Kctgs = KeyManager.generate_key(KeyManager,128)
+    KeyManager.save_key("KCTGS.txt",Kctgs)
     server = Server('localhost', 9997)
+    AD_c = server.conn.getsockname()[0].encode()
 
     
-    rec = server.recv().decode()
-    print(rec)
+    rec = server.recv()
+    IDC, IDTGS, TS1 = cryptoM.disassemble2bytes(rec)
+    print("idc, idtgs, ts1\n",IDC.decode(),"\n",IDTGS.decode(),"\n",TS1.decode(),"\n\n")
+    time.sleep(1)
+    ts2 = int( time.time() )
 
-    ts2 = str(int( time.time() ))
-    ticket = DesKey(Ktgs).encrypt(Kctgs+(IDC+"127.0.0.1:9997"+IDTGS+ts2+Lifetime2).encode(),padding=True)
-    ret =  DesKey(Kc).encrypt(Kctgs+(IDTGS+ts2+Lifetime2).encode()+ticket,padding = True)
-    server.send(ret)
+    ticketC = cryptoM.assemble2bytes(Kctgs,IDC,AD_c, IDTGS,ts2,Lifetime2)
+    E_tgs = AES.new(Ktgs, AES.MODE_ECB)
+    Ticket_tgs = E_tgs.encrypt(pad(ticketC,BLOCK_SIZE))
+   
+    msg2_content = cryptoM.assemble2bytes(Kctgs, IDTGS, ts2, Lifetime2, Ticket_tgs)
+    E_c = AES.new(Kc, AES.MODE_ECB)
+    msg2 = E_c.encrypt(pad(msg2_content,BLOCK_SIZE))
+    
+    server.send(msg2)
+    
     server.close()
